@@ -7,7 +7,7 @@ const typeOrmConfig: TypeOrmModuleOptions = {
   host: 'localhost',
   port: 5432,
   database: 'baseapp',
-  entities: [__dirname + '../**/*.entity{.ts,.js}'],
+  entities: [__dirname + '/../**/*.entity{.ts,.js}'],
   synchronize: true,
 };
 

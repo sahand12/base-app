@@ -17,7 +17,7 @@ enum UserRole {
 // instances of entity classes when loading from the database, therefore it is not
 // aware of your constructor arguments;
 @Entity()
-class User extends BaseEntity {
+export class User extends BaseEntity {
   @PrimaryGeneratedColumn('uuid') id: string;
 
   @Column({
@@ -45,5 +45,3 @@ class User extends BaseEntity {
 
   @VersionColumn() v: number;
 }
-
-export { User, UserRole };

@@ -13,7 +13,7 @@ class SignupDto {
   @IsNotEmpty()
   @MinLength(8)
   @MaxLength(72)
-  repeat: string;
+  repeatPassword: string;
 }
 
 export { SignupDto };
