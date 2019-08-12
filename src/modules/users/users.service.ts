@@ -15,8 +15,18 @@ export class UsersService {
     return this.userRepository.signUp(signupDto);
   }
 
-  logIn(loginDto: LoginDto) {
-    return false;
+  logIn(loginDto: LoginDto): Promise<UserDbDto | false | undefined> {
+    const { password, cellphone } = loginDto;
+    return this.validateUser(cellphone, password);
+  }
+
+  async findUser(select: object): Promise<UserDbDto | undefined> {
+    const user = await this.userRepository.findOne(select);
+    if (user !== undefined) {
+      const { password, ...ret } = user;
+      return ret;
+    }
+    return undefined;
   }
 
   validateUser(

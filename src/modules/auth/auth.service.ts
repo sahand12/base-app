@@ -1,5 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { JwtService } from '@nestjs/jwt';
 import { UserRepository } from '../users/user.repository';
 import { LoginDto } from './dto/login.dto';
 import { SignupDto } from './dto/signup.dto';
@@ -10,16 +15,36 @@ import { UserDbDto } from '../users/dto/user-db.dto';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly JwtService: JwtService,
+  ) {}
 
-  logIn(loginDto: LoginDto) {
-    return 'not implemented yet';
+  async logIn(user: UserDbDto) {
+    const payload = { id: user.id, cellphone: user.cellphone };
+    return {
+      access_token: this.JwtService.sign(payload),
+    };
+    // const { cellphone, password } = loginDto;
+    // const user: UserDbDto | false | undefined = await this.usersService.logIn(
+    //   loginDto,
+    // );
+
+    // // 1. No user found || 2. Incorrect credentials
+    // if (user === undefined || user === false) {
+    //   throw new BadRequestException(
+    //     `Incorrect cellphone number (${cellphone}) or incorrect password`,
+    //   );
+    // }
+
+    // return user;
   }
 
   async signUp(signupDto: SignupDto) {
     return this.usersService.signUp(signupDto);
   }
 
+  // To be used with passport strategy
   async validateUser(
     cellphone: string,
     pass: string,

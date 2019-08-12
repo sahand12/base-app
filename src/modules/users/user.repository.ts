@@ -1,3 +1,4 @@
+import { BadRequestException } from '@nestjs/common';
 import { User } from './user.entity';
 import * as bcrypt from 'bcrypt';
 import { EntityRepository, Repository } from 'typeorm';
@@ -9,17 +10,26 @@ const SALT_ROUNDS = 8;
 @EntityRepository(User)
 class UserRepository extends Repository<User> {
   async signUp(signupDto: SignupDto): Promise<UserDbDto> {
-    const { cellphone, password: pass, repeatPassword } = signupDto;
+    try {
+      const { cellphone, password: pass, repeatPassword } = signupDto;
 
-    const user = new User();
-    user.cellphone = cellphone;
-    user.password = await this.hashPassword(pass);
-    user.email = null;
-    user.nickname = '';
-    await user.save();
+      const user = new User();
+      user.cellphone = cellphone;
+      user.password = await this.hashPassword(pass);
+      user.email = null;
+      user.nickname = '';
+      await user.save();
 
-    const { password, ...rest } = user;
-    return rest;
+      const { password, ...rest } = user;
+      return rest;
+    } catch (err) {
+      if (err.code === '23505') {
+        const error = new BadRequestException('Duplicate phone number');
+        throw error;
+      } else {
+        throw err;
+      }
+    }
   }
 
   /**
