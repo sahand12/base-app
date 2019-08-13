@@ -1,29 +1,21 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { UserRepository } from '../users/user.repository';
-import { LoginDto } from './dto/login.dto';
 import { SignupDto } from './dto/signup.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { UsersService } from '../users/users.service';
-import { User } from '../users/user.entity';
 import { UserDbDto } from '../users/dto/user-db.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
-    private readonly JwtService: JwtService,
+    private readonly jwtService: JwtService,
   ) {}
 
   async logIn(user: UserDbDto) {
-    const payload = { id: user.id, cellphone: user.cellphone };
+    const payload = { id: user.id };
     return {
-      access_token: this.JwtService.sign(payload),
+      access_token: this.jwtService.sign(payload),
     };
     // const { cellphone, password } = loginDto;
     // const user: UserDbDto | false | undefined = await this.usersService.logIn(

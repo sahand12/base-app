@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { ConflictException } from '@nestjs/common';
 import { User } from './user.entity';
 import * as bcrypt from 'bcrypt';
 import { EntityRepository, Repository } from 'typeorm';
@@ -24,8 +24,7 @@ class UserRepository extends Repository<User> {
       return rest;
     } catch (err) {
       if (err.code === '23505') {
-        const error = new BadRequestException('Duplicate phone number');
-        throw error;
+        throw new ConflictException('Phone number already exists');
       } else {
         throw err;
       }

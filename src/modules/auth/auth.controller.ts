@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   Post,
   Request,
   UseGuards,
@@ -8,7 +9,6 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
-import { LoginDto } from './dto/login.dto';
 import { SignupDto } from './dto/signup.dto';
 
 @Controller('auth')
@@ -17,9 +17,14 @@ export class AuthController {
 
   @UseGuards(AuthGuard('local'))
   @Post('login')
-  // logIn(@Body(ValidationPipe) loginDto: LoginDto) {
   logIn(@Request() req) {
     return this.authService.logIn(req.user);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('me')
+  getProfile(@Request() req) {
+    return req.user;
   }
 
   // @TODO: consider duplicate phone numbers
