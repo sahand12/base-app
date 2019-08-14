@@ -7,6 +7,9 @@ import {
   MinLength,
 } from 'class-validator';
 import { IsTheSameAs } from '../../../pipes/is-the-same-as.validation-decorator';
+import {ParseIRCellphonePipe} from '../../../pipes/parse-IR-cellphone.pipe';
+import {Transform} from 'class-transformer';
+
 enum SignUpBy {
   EMAIL = 'EMAIL',
   CELLPHONE = 'CELLPHONE',

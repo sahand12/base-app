@@ -11,13 +11,7 @@ const SALT_ROUNDS = 8;
 class UserRepository extends Repository<User> {
   async signUp(signupDto: SignupDto): Promise<UserDbDto> {
     try {
-      const { cellphone, password: pass, repeatPassword } = signupDto;
-
-      const user = new User();
-      user.cellphone = cellphone;
-      user.password = await this.hashPassword(pass);
-      user.email = null;
-      user.nickname = '';
+      const user = await this._buildNewUser(signupDto);
       await user.save();
 
       const { password, ...rest } = user;
@@ -56,6 +50,16 @@ class UserRepository extends Repository<User> {
 
     // 3. Incorrect credentials
     return false;
+  }
+
+  private async _buildNewUser({ cellphone, password }): Promise<User> {
+    const user = new User();
+    user.cellphone = cellphone;
+    if (password !== null && password !== undefined && password !== '') {
+      user.password = await this.hashPassword(password);
+    }
+
+    return user;
   }
 
   hashPassword(plainPassword): Promise<string> {

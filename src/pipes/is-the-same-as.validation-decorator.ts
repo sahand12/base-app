@@ -8,7 +8,7 @@ export function IsTheSameAs(
   property: string,
   validationOptions: ValidationOptions = {},
 ) {
-  return function(object: Object, propertyName: string) {
+  return function(object: any, propertyName: string) {
     registerDecorator({
       name: 'isTheSameAs',
       target: object.constructor,

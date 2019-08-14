@@ -5,11 +5,13 @@ import {
   Post,
   Request,
   UseGuards,
+  UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { SignupDto } from './dto/signup.dto';
+import { ParseIRCellphonePipe } from '../../pipes/parse-IR-cellphone.pipe';
 
 @Controller('auth')
 export class AuthController {
@@ -29,7 +31,12 @@ export class AuthController {
 
   // @TODO: consider duplicate phone numbers
   @Post('signup')
-  signUp(@Body(ValidationPipe) signupDto: SignupDto) {
+  signUp(
+    @Body(ValidationPipe) signupDto: SignupDto,
+    // @Body('cellphone', new ParseIRCellphonePipe())
+    // cellphone: string,
+  ) {
+    // console.log(cellphone);
     return this.authService.signUp(signupDto);
   }
 
