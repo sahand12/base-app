@@ -8,7 +8,7 @@ import {
   VersionColumn,
   ManyToOne,
 } from 'typeorm';
-import { Avatar } from './avatar.entity';
+import { Avatar } from '../avatars/avatar.entity';
 
 enum UserRole {
   ADMIN = 'admin',
@@ -28,27 +28,33 @@ export class User extends BaseEntity {
 
   @Column({ type: 'varchar', length: 11, unique: true })
   cellphone: string;
-  @Column({ type: 'date', nullable: true }) // if null: not verified yet
+  @Column({ type: 'date', nullable: true, default: null }) // if null: not verified yet
   cellphoneVerifiedAt: Date;
 
-  @Column({ type: 'varchar', length: 80, nullable: true, unique: true })
+  @Column({
+    type: 'varchar',
+    length: 80,
+    unique: true,
+    nullable: true,
+    default: null,
+  })
   email: string;
-  @Column({ type: 'date', nullable: true })
+  @Column({ type: 'date', nullable: true, default: null })
   emailVerifiedAt: Date;
 
-  @Column({ type: 'varchar', length: 72 })
+  @Column({ type: 'varchar', length: 72, nullable: true, default: null })
   password: string;
-  @Column({ type: 'varchar', length: 72, nullable: true })
+  @Column({ type: 'varchar', length: 72, nullable: true, default: null })
   passwordResetToken: string;
-  @Column({ type: 'date', nullable: true })
+  @Column({ type: 'date', nullable: true, default: null })
   passwordResetExpires: Date;
 
-  @Column({ type: 'varchar', length: 72, nullable: true })
+  @Column({ type: 'varchar', length: 72, nullable: true, default: null })
   registrationCode: string;
-  @Column({ type: 'date', nullable: true })
+  @Column({ type: 'date', nullable: true, default: null })
   registrationCodeExpires: Date;
 
-  @Column({ type: 'varchar', length: 40, nullable: true })
+  @Column({ type: 'varchar', length: 40, nullable: true, default: null })
   nickname: string;
 
   @Column({ type: 'enum', enum: UserRole, default: UserRole.PLAYER })

@@ -12,14 +12,16 @@ import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { SignupDto } from './dto/signup.dto';
 import { ParseIRCellphonePipe } from '../../pipes/parse-IR-cellphone.pipe';
+import { LoginDto } from './dto/login.dto';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @UsePipes(ValidationPipe)
   @UseGuards(AuthGuard('local'))
   @Post('login')
-  logIn(@Request() req) {
+  logIn(@Body() loginDto: LoginDto, @Request() req) {
     return this.authService.logIn(req.user);
   }
 
@@ -30,9 +32,10 @@ export class AuthController {
   }
 
   // @TODO: consider duplicate phone numbers
+  // @UsePipes(ValidationPipe)
   @Post('signup')
   signUp(
-    @Body(ValidationPipe) signupDto: SignupDto,
+    @Body() signupDto: SignupDto,
     // @Body('cellphone', new ParseIRCellphonePipe())
     // cellphone: string,
   ) {
