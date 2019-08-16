@@ -1,8 +1,9 @@
 import { IsNotEmpty, Length, MaxLength, MinLength } from 'class-validator';
+import { IsIRCellphoneNumber } from '../../../pipes/is-IR-cellphone-number';
 
 class LoginDto {
   @IsNotEmpty()
-  @Length(10, 11)
+  @IsIRCellphoneNumber()
   cellphone: string;
 
   @IsNotEmpty()

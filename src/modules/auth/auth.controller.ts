@@ -31,16 +31,15 @@ export class AuthController {
     return req.user;
   }
 
-  // @TODO: consider duplicate phone numbers
-  // @UsePipes(ValidationPipe)
+  @UsePipes(ValidationPipe)
   @Post('signup')
   signUp(
     @Body() signupDto: SignupDto,
-    // @Body('cellphone', new ParseIRCellphonePipe())
-    // cellphone: string,
+    @Body('cellphone', ParseIRCellphonePipe)
+    cellphone: string,
   ) {
-    // console.log(cellphone);
-    return this.authService.signUp(signupDto);
+    // return { ...signupDto, cellphone };
+    return this.authService.signUp({ ...signupDto, cellphone });
   }
 
   @Post()

@@ -7,8 +7,7 @@ import {
   MinLength,
 } from 'class-validator';
 import { IsTheSameAs } from '../../../pipes/is-the-same-as.validation-decorator';
-import {ParseIRCellphonePipe} from '../../../pipes/parse-IR-cellphone.pipe';
-import {Transform} from 'class-transformer';
+import { IsIRCellphoneNumber } from '../../../pipes/is-IR-cellphone-number';
 
 enum SignUpBy {
   EMAIL = 'EMAIL',
@@ -18,7 +17,7 @@ enum SignUpBy {
 // @TODO: i18n error messaging
 class SignupDto {
   @IsNotEmpty()
-  @Length(10, 11)
+  // @IsIRCellphoneNumber() // will be handled by transformation layer
   cellphone: string;
 
   @IsNotEmpty()
