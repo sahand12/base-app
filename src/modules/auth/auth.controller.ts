@@ -5,6 +5,7 @@ import {
   Post,
   Request,
   UseGuards,
+  UseInterceptors,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
@@ -13,7 +14,9 @@ import { AuthService } from './auth.service';
 import { SignupDto } from './dto/signup.dto';
 import { ParseIRCellphonePipe } from '../../pipes/parse-IR-cellphone.pipe';
 import { LoginDto } from './dto/login.dto';
+import { LoggingInterceptor } from '../../interceptors/sample.interceptor';
 
+@UseInterceptors(LoggingInterceptor)
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}

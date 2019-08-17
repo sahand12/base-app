@@ -1,6 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import { RequestIdMiddleware } from './middlewares/request-id.middleware';
+import { logger, LoggerMiddleware } from './middlewares/logger.middleware';
 
 declare const module: any;
 

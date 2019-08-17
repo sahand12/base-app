@@ -1,12 +1,15 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
 import { typeOrmConfig } from './config/typeorm.config';
+import { PlgModule } from './modules/plg/plg.module';
+import { logger, LoggerMiddleware } from './middlewares/logger.middleware';
+import { RequestIdMiddleware } from './middlewares/request-id.middleware';
 
 @Module({
-  imports: [TypeOrmModule.forRoot(typeOrmConfig), AuthModule],
+  imports: [TypeOrmModule.forRoot(typeOrmConfig), AuthModule, PlgModule],
   controllers: [AppController],
   providers: [AppService],
 })
