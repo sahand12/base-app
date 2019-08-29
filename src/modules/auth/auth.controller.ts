@@ -1,49 +1,51 @@
 import {
   Body,
   Controller,
-  Get,
   Post,
-  Request,
   UseGuards,
   UseInterceptors,
   UsePipes,
-  ValidationPipe,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { SignupDto } from './dto/signup.dto';
-import { ParseIRCellphonePipe } from '../../pipes/parse-IR-cellphone.pipe';
-import { LoginDto } from './dto/login.dto';
 import { LoggingInterceptor } from '../../interceptors/sample.interceptor';
+import { BodyValidationGuard } from '../../guards/body-validation.guard';
+import { TransformationPipe } from '../../pipes/transformation.pipe';
+import { cleanIRCellphoneNumber } from '../../pipes/helpers/is-valid-IR-cellphone-number';
 
 @UseInterceptors(LoggingInterceptor)
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @UsePipes(ValidationPipe)
-  @UseGuards(AuthGuard('local'))
-  @Post('login')
-  logIn(@Body() loginDto: LoginDto, @Request() req) {
-    return this.authService.logIn(req.user);
-  }
-
-  @UseGuards(AuthGuard('jwt'))
-  @Get('me')
-  getProfile(@Request() req) {
-    return req.user;
-  }
-
-  @UsePipes(ValidationPipe)
+  @UseGuards(new BodyValidationGuard(SignupDto))
+  @UsePipes(
+    new TransformationPipe('body', [
+      { name: 'cellphone', fn: cleanIRCellphoneNumber },
+    ]),
+  )
   @Post('signup')
-  signUp(
-    @Body() signupDto: SignupDto,
-    @Body('cellphone', ParseIRCellphonePipe)
-    cellphone: string,
-  ) {
-    // return { ...signupDto, cellphone };
-    return this.authService.signUp({ ...signupDto, cellphone });
+  signUp(@Body() body) {
+    return this.authService.signUp(body);
   }
+
+  @Post('signup/verify')
+  verifySignup(@Body() body) {
+    return this.authService.verifySignUp(body);
+  }
+
+  // @UsePipes(ValidationPipe)
+  // @UseGuards(AuthGuard('local'))
+  // @Post('login')
+  // logIn(@Body() loginDto: LoginDto, @Request() req) {
+  //   return this.authService.logIn(req.user);
+  // }
+
+  // @UseGuards(AuthGuard('jwt'))
+  // @Get('me')
+  // getProfile(@Request() req) {
+  //   return req.user;
+  // }
 
   @Post()
   forgotPassword(@Body('cellphone') cellphone) {

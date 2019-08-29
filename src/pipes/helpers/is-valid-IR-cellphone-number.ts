@@ -16,11 +16,11 @@ function cleanIRCellphoneNumber(cellphone: string): string {
     .replace(/\s/g, '')
     .replace(/^[0۰]/, '')
     .replace(/([۰-۹])/g, function replacer(match, p1) {
-      return IrToEn[p1];
+      return IR_TO_EN[p1];
     });
 }
 
-const IrToEn = {
+const IR_TO_EN = {
   '۰': '0',
   '۱': '1',
   '۲': '2',

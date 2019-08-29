@@ -3,7 +3,7 @@ import { compose, identity } from 'ramda';
 
 interface TransformationRule {
   name: string;
-  fns: Function[];
+  fn: (value: any, obj?: any) => any;
 }
 
 export class TransformationPipe implements PipeTransform {
@@ -14,9 +14,9 @@ export class TransformationPipe implements PipeTransform {
 
   transform(value: any, metadata: ArgumentMetadata) {
     if (metadata.type === this.type) {
-      this.rules.forEach(({ name, fns }) => {
-        if (value.hasOwnProperty(name)) {
-          value[name] = compose(...fns)(value[name]);
+      this.rules.forEach(({ name, fn }) => {
+        if (Object.hasOwnProperty.call(value, name)) {
+          value[name] = fn(value[name], value);
         }
       });
     }

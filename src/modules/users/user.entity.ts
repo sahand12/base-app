@@ -7,6 +7,7 @@ import {
   UpdateDateColumn,
   VersionColumn,
   ManyToOne,
+  OneToMany,
 } from 'typeorm';
 import { Avatar } from '../avatars/avatar.entity';
 
@@ -15,8 +16,9 @@ enum UserRole {
   PLAYER = 'player',
 }
 
-enum RegistrationStatus {
-  VERIFICATION_PENDING = 'VERIFICATION_PENDING',
+export enum UserRegistrationStatus {
+  PENDING_VERIFICATION = 'PENDING_VERIFICATION',
+  DONE = 'DONE',
 }
 
 // When using an entity constructor its arguments must be optional. Since ORM creates
@@ -26,8 +28,22 @@ enum RegistrationStatus {
 export class User extends BaseEntity {
   @PrimaryGeneratedColumn('uuid') id: string;
 
-  @Column({ type: 'varchar', length: 11, unique: true })
+  @Column({
+    type: 'enum',
+    enum: UserRegistrationStatus,
+    default: UserRegistrationStatus.PENDING_VERIFICATION,
+  })
+  registrationStatus: string;
+
+  @Column({
+    type: 'varchar',
+    length: 11,
+    unique: true,
+    nullable: true,
+    default: null,
+  })
   cellphone: string;
+
   @Column({ type: 'date', nullable: true, default: null }) // if null: not verified yet
   cellphoneVerifiedAt: Date;
 
@@ -39,20 +55,24 @@ export class User extends BaseEntity {
     default: null,
   })
   email: string;
+
   @Column({ type: 'date', nullable: true, default: null })
   emailVerifiedAt: Date;
 
   @Column({ type: 'varchar', length: 72, nullable: true, default: null })
   password: string;
+
   @Column({ type: 'varchar', length: 72, nullable: true, default: null })
   passwordResetToken: string;
+
   @Column({ type: 'date', nullable: true, default: null })
   passwordResetExpires: Date;
 
   @Column({ type: 'varchar', length: 72, nullable: true, default: null })
-  registrationCode: string;
+  registrationToken: string;
+
   @Column({ type: 'date', nullable: true, default: null })
-  registrationCodeExpires: Date;
+  registrationTokenExpires: Date;
 
   @Column({ type: 'varchar', length: 40, nullable: true, default: null })
   nickname: string;

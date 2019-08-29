@@ -1,17 +1,16 @@
 import {
-  IsNotEmpty,
+  IsEmail,
   IsIn,
+  IsNotEmpty,
   MaxLength,
   MinLength,
   ValidateIf,
-  IsEmail,
 } from 'class-validator';
-import { IsTheSameAs } from '../../../pipes/validators/is-the-same-as.validation-decorator';
 import { IsIRCellphoneNumber } from '../../../pipes/validators/is-ir-cellphone-number.validation-decorator';
+import { IsTheSameAs } from '../../../pipes/validators/is-the-same-as.validation-decorator';
 
-// @TODO: i18n error messaging
 export class SignupDto {
-  @ValidateIf(o => o.method === 'CELLPHONE')
+  @ValidateIf(o => o.method === 'SMS')
   @IsNotEmpty()
   @IsIRCellphoneNumber()
   cellphone: string;
@@ -21,22 +20,14 @@ export class SignupDto {
   @IsEmail()
   email: string;
 
-  @IsNotEmpty()
   @MinLength(8)
   @MaxLength(72)
   password: string;
 
   @IsNotEmpty()
   @IsTheSameAs('password')
-  passRepeat: string;
+  passwordRepeat: string;
 
-  @IsIn(['CELLPHONE', 'EMAIL'], {
-    message: 'Invalid authentication method',
-  })
+  @IsIn(['EMAIL', 'SMS', 'GOOGLE', 'INSTAGRAM'])
   method: string;
-}
-
-export enum RegistrationMethod {
-  CELLPHONE = 'CELLPHONE',
-  EMAIL = 'EMAIL',
 }

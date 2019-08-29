@@ -4,6 +4,7 @@ import { UserRepository } from './user.repository';
 import { SignupDto } from '../auth/dto/signup.dto';
 import { LoginDto } from '../auth/dto/login.dto';
 import { UserDbDto } from './dto/user-db.dto';
+import { VerifySignupDto } from '../auth/dto/verify-signup.dto';
 
 @Injectable()
 export class UsersService {
@@ -13,6 +14,10 @@ export class UsersService {
 
   signUp(signupDto: SignupDto) {
     return this.userRepository.signUp(signupDto);
+  }
+
+  verifySignup(verifySignupDto: VerifySignupDto) {
+    return this.userRepository.verifySignup(verifySignupDto);
   }
 
   logIn(loginDto: LoginDto): Promise<UserDbDto | false | undefined> {

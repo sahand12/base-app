@@ -4,6 +4,7 @@ import { SignupDto } from './dto/signup.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { UsersService } from '../users/users.service';
 import { UserDbDto } from '../users/dto/user-db.dto';
+import { VerifySignupDto } from './dto/verify-signup.dto';
 
 @Injectable()
 export class AuthService {
@@ -34,6 +35,10 @@ export class AuthService {
 
   async signUp(signupDto: SignupDto) {
     return this.usersService.signUp(signupDto);
+  }
+
+  async verifySignUp(verifySignupDto: VerifySignupDto) {
+    return this.usersService.verifySignup(verifySignupDto);
   }
 
   // To be used with passport strategy

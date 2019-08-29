@@ -1,9 +1,16 @@
 import { ConflictException } from '@nestjs/common';
-import { User } from './user.entity';
+import { User, UserRegistrationStatus } from './user.entity';
 import * as bcrypt from 'bcrypt';
 import { EntityRepository, Repository } from 'typeorm';
-import { SignupDto } from '../auth/dto/signup.dto';
+import { RegistrationMethod, SignupDto } from '../auth/dto/signup.dto';
 import { UserDbDto } from './dto/user-db.dto';
+import { VerifySignupDto } from '../auth/dto/verify-signup.dto';
+import {
+  InvalidRegistrationTokenError,
+  RegistrationTokenExpired,
+  UserAlreadyRegisteredError,
+  UserNotFoundError,
+} from './users.errors';
 
 const SALT_ROUNDS = 8;
 
@@ -23,6 +30,49 @@ class UserRepository extends Repository<User> {
         throw err;
       }
     }
+  }
+
+  async verifySignup(verifySignupDto: VerifySignupDto) {
+    const { method, cellphone, email, token } = verifySignupDto;
+    let options = {};
+    if (method === RegistrationMethod.CELLPHONE) {
+      options = Object.assign(options, { cellphone });
+    } else if (method === RegistrationMethod.EMAIL) {
+      options = Object.assign(options, { email });
+    }
+    const user = await this.findOne(options);
+
+    // 1. user not found.
+    if (user === undefined) {
+      throw new UserNotFoundError();
+    }
+
+    // 2. User has already been registered.
+    if (user.registrationStatus === UserRegistrationStatus.DONE) {
+      throw new UserAlreadyRegisteredError();
+    }
+
+    // 3. Invalid registration token
+    if (user.registrationToken !== token) {
+      throw new InvalidRegistrationTokenError();
+    }
+
+    // 4. Registration token has expired
+    if (user.registrationTokenExpires < new Date()) {
+      throw new RegistrationTokenExpired();
+    }
+
+    user.registrationTokenExpires = null;
+    user.registrationToken = null;
+    user.registrationStatus = UserRegistrationStatus.DONE;
+    if (method === RegistrationMethod.EMAIL) {
+      user.emailVerifiedAt = new Date();
+    } else if (method === RegistrationMethod.CELLPHONE) {
+      user.cellphoneVerifiedAt = new Date();
+    }
+
+    await user.save();
+    return user;
   }
 
   /**
