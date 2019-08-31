@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { SignupDto } from './dto/signup.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
-import { UsersService } from '../users/users.service';
+import { LoginOrSignupResult, UsersService } from '../users/users.service';
 import { UserDbDto } from '../users/dto/user-db.dto';
 import { VerifySignupDto } from './dto/verify-signup.dto';
+import { LoginOrSignupDto } from './dto/login-or-signup.dto';
+import { InvalidLoginOrSignupResult } from '../users/users.errors';
+import { User } from '../users/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -12,6 +14,26 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
   ) {}
+
+  async loginOrSignup(signupDto: LoginOrSignupDto) {
+    const { result, user } = await this.usersService.loginOrSignup(signupDto);
+
+    if (result === LoginOrSignupResult.LOGIN) {
+      this._handleLogin(user);
+    } else if (result === LoginOrSignupResult.VERIFICATION) {
+      this._handleVerification(user);
+    } else if (result === LoginOrSignupResult.SIGNUP) {
+      this._handleSignup(user);
+    } else {
+      throw new InvalidLoginOrSignupResult(result);
+    }
+  }
+
+  private _handleLogin(user: User) {}
+
+  private _handleSignup(user: User) {}
+
+  private _handleVerification(user: User) {}
 
   async logIn(user: UserDbDto) {
     const payload = { id: user.id };
@@ -31,10 +53,6 @@ export class AuthService {
     // }
 
     // return user;
-  }
-
-  async signUp(signupDto: SignupDto) {
-    return this.usersService.signUp(signupDto);
   }
 
   async verifySignUp(verifySignupDto: VerifySignupDto) {

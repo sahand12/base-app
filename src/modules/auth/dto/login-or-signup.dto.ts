@@ -6,11 +6,10 @@ import {
   ValidateIf,
   IsEmail,
 } from 'class-validator';
-import { IsTheSameAs } from '../../../pipes/validators/is-the-same-as.validation-decorator';
 import { IsIRCellphoneNumber } from '../../../pipes/validators/is-ir-cellphone-number.validation-decorator';
 
 // @TODO: i18n error messaging
-export class SignupDto {
+export class LoginOrSignupDto {
   @ValidateIf(o => o.method === 'CELLPHONE')
   @IsNotEmpty()
   @IsIRCellphoneNumber()
@@ -25,10 +24,6 @@ export class SignupDto {
   @MinLength(8)
   @MaxLength(72)
   password: string;
-
-  @IsNotEmpty()
-  @IsTheSameAs('password')
-  passRepeat: string;
 
   @IsIn(['CELLPHONE', 'EMAIL'], {
     message: 'Invalid authentication method',

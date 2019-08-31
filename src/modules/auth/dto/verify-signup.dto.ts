@@ -14,7 +14,7 @@ export class VerifySignupDto {
 
   @IsNotEmpty() token: string;
 
-  @IsIn(['CELLPHONE', 'EMAIL', 'GOOGLE', 'INSTAGRAM'], {
+  @IsIn(['CELLPHONE', 'EMAIL'], {
     message: 'Invalid authentication method',
   })
   method: string;

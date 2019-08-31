@@ -2,21 +2,24 @@ import { ConflictException } from '@nestjs/common';
 import { User, UserRegistrationStatus } from './user.entity';
 import * as bcrypt from 'bcrypt';
 import { EntityRepository, Repository } from 'typeorm';
-import { RegistrationMethod, SignupDto } from '../auth/dto/signup.dto';
 import { UserDbDto } from './dto/user-db.dto';
 import { VerifySignupDto } from '../auth/dto/verify-signup.dto';
 import {
   InvalidRegistrationTokenError,
-  RegistrationTokenExpired,
+  RegistrationTokenExpiredError,
   UserAlreadyRegisteredError,
   UserNotFoundError,
 } from './users.errors';
+import {
+  RegistrationMethod,
+  LoginOrSignupDto,
+} from '../auth/dto/login-or-signup.dto';
 
-const SALT_ROUNDS = 8;
+const SALT_ROUNDS = 10;
 
 @EntityRepository(User)
 class UserRepository extends Repository<User> {
-  async signUp(signupDto: SignupDto): Promise<UserDbDto> {
+  async signUp(signupDto: LoginOrSignupDto): Promise<UserDbDto> {
     try {
       const user = await this._buildNewUser(signupDto);
       await user.save();
@@ -59,7 +62,7 @@ class UserRepository extends Repository<User> {
 
     // 4. Registration token has expired
     if (user.registrationTokenExpires < new Date()) {
-      throw new RegistrationTokenExpired();
+      throw new RegistrationTokenExpiredError();
     }
 
     user.registrationTokenExpires = null;

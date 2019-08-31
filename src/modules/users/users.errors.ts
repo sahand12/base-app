@@ -28,15 +28,34 @@ class InvalidRegistrationTokenError extends UsersErrors {
   }
 }
 
-class RegistrationTokenExpired extends UsersErrors {
+class InvalidRegistrationMethod extends UsersErrors {
+  constructor(message?: string) {
+    super(
+      message ||
+        'Invalid registration method (CELLPHONE, EMAIL are only allowed)',
+    );
+  }
+}
+
+class RegistrationTokenExpiredError extends UsersErrors {
   constructor(message?: string) {
     super(message || 'Registration token has expired');
   }
 }
 
+class InvalidLoginOrSignupResult extends UsersErrors {
+  constructor(providedResult: string, message?: string) {
+    super(
+      message || 'Invalid Login or signup result (LOGIN, SIGNUP, VERIFICATION',
+    );
+  }
+}
+
 export {
+  InvalidLoginOrSignupResult,
   InvalidRegistrationTokenError,
-  RegistrationTokenExpired,
+  InvalidRegistrationMethod,
+  RegistrationTokenExpiredError,
   UserNotFoundError,
   IncorrectUserCredentialsError,
   UserAlreadyRegisteredError,
