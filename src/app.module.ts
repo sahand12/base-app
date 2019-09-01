@@ -7,9 +7,10 @@ import { typeOrmConfig } from './config/typeorm.config';
 import { PlgModule } from './modules/plg/plg.module';
 import { logger, LoggerMiddleware } from './middlewares/logger.middleware';
 import { RequestIdMiddleware } from './middlewares/request-id.middleware';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 
 @Module({
-  imports: [TypeOrmModule.forRoot(typeOrmConfig), AuthModule, PlgModule],
+  imports: [TypeOrmModule.forRoot(typeOrmConfig), AuthModule, PlgModule, NotificationsModule],
   controllers: [AppController],
   providers: [AppService],
 })

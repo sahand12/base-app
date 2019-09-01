@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import {pick} from 'ramda';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { LoginOrSignupResult, UsersService } from '../users/users.service';
 import { UserDbDto } from '../users/dto/user-db.dto';
@@ -13,27 +14,51 @@ export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
+    private notificationService: NotificationService,
   ) {}
 
   async loginOrSignup(signupDto: LoginOrSignupDto) {
     const { result, user } = await this.usersService.loginOrSignup(signupDto);
+    console.log(result, user);
 
     if (result === LoginOrSignupResult.LOGIN) {
-      this._handleLogin(user);
-    } else if (result === LoginOrSignupResult.VERIFICATION) {
-      this._handleVerification(user);
-    } else if (result === LoginOrSignupResult.SIGNUP) {
-      this._handleSignup(user);
-    } else {
-      throw new InvalidLoginOrSignupResult(result);
+      return this._handleLogin(user);
     }
+    if (result === LoginOrSignupResult.NEEDS_VERIFICATION) {
+      return this._handleVerification(user);
+    }
+    if (result === LoginOrSignupResult.SIGNUP) {
+      return this._handleSignup(user);
+    }
+    throw new InvalidLoginOrSignupResult(result);
   }
 
-  private _handleLogin(user: User) {}
+  // 1. create a token and hand it back to the user. so on the subsequent call we
+  // can validate the user based on that.
+  private _handleLogin(user: User) {
+    return {
+      data: {
+        user,
+      },
+    };
+  }
 
-  private _handleSignup(user: User) {}
+  // 1. User has been created but needs to verify its email/cellphone so send
+  // the registration token by email/sms/...
+  private _handleSignup(user: User) {
+    return {
+      action: 'REDIRECT',
+      data: {
+        to: '/auth/login/verify',
+      },
+    };
+  }
 
-  private _handleVerification(user: User) {}
+  // 1. User is created before but he has not verified his email/sms so send a redirect
+  // to verification form and also sends the code via sms/email/...
+  private _handleVerification(user: User) {
+    return user;
+  }
 
   async logIn(user: UserDbDto) {
     const payload = { id: user.id };

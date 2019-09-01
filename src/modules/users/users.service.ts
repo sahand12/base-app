@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { randomBytes } from 'crypto';
 import { addMinutes } from 'date-fns';
 import { UserRepository } from './user.repository';
 import { LoginDto } from '../auth/dto/login.dto';
@@ -20,7 +19,7 @@ const REGISTRATION_TOKEN_EXPIRATION_DURATION_MINUTES = 3;
 enum LoginOrSignupResult {
   'SIGNUP' = 'SIGNUP',
   'LOGIN' = 'LOGIN',
-  'VERIFICATION' = 'VERIFICATION',
+  'NEEDS_VERIFICATION' = 'NEEDS_VERIFICATION',
 }
 
 @Injectable()
@@ -60,7 +59,7 @@ class UsersService {
       await user.save();
 
       return {
-        result: LoginOrSignupResult.VERIFICATION,
+        result: LoginOrSignupResult.NEEDS_VERIFICATION,
         user,
       };
     }
