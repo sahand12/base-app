@@ -7,10 +7,12 @@ import { UsersModule } from '../users/users.module';
 import { LocalStrategy } from './local.strategy';
 import { jwtConstants } from './constants';
 import { JwtStrategy } from './jwt.strategy';
+import { NotificationsModule } from '../notifications/notification.module';
 
 @Module({
   imports: [
     UsersModule,
+    NotificationsModule,
     PassportModule.register({ defaultStrategy: 'jwt', session: true }),
     JwtModule.register({
       secret: jwtConstants.secret,

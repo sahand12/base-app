@@ -1,6 +1,6 @@
 function isValidIRCellphoneNumber(cellphone: string): boolean {
   const cleaned = cleanIRCellphoneNumber(cellphone);
-  if (cleaned.length !== 10) {
+  if (cleaned === undefined || cleaned.length !== 10) {
     return false;
   }
   const regexp = /^9\d{9}$/;

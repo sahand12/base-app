@@ -10,6 +10,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { Avatar } from '../avatars/avatar.entity';
+import { Notification } from '../notifications/notification.entity';
 
 enum UserRole {
   ADMIN = 'admin',
@@ -33,7 +34,7 @@ export class User extends BaseEntity {
     enum: UserRegistrationStatus,
     default: UserRegistrationStatus.PENDING_VERIFICATION,
   })
-  registrationStatus: string;
+  registrationStatus: UserRegistrationStatus;
 
   @Column({
     type: 'varchar',
@@ -44,7 +45,7 @@ export class User extends BaseEntity {
   })
   cellphone: string;
 
-  @Column({ type: 'date', nullable: true, default: null }) // if null: not verified yet
+  @Column({ type: 'timestamptz', nullable: true, default: null }) // if null: not verified yet
   cellphoneVerifiedAt: Date;
 
   @Column({
@@ -56,7 +57,7 @@ export class User extends BaseEntity {
   })
   email: string;
 
-  @Column({ type: 'date', nullable: true, default: null })
+  @Column({ type: 'timestamptz', nullable: true, default: null })
   emailVerifiedAt: Date;
 
   @Column({ type: 'varchar', length: 72, nullable: true, default: null })
@@ -65,13 +66,13 @@ export class User extends BaseEntity {
   @Column({ type: 'varchar', length: 72, nullable: true, default: null })
   passwordResetToken: string;
 
-  @Column({ type: 'date', nullable: true, default: null })
+  @Column({ type: 'timestamptz', nullable: true, default: null })
   passwordResetExpires: Date;
 
   @Column({ type: 'varchar', length: 72, nullable: true, default: null })
   registrationToken: string;
 
-  @Column({ type: 'date', nullable: true, default: null })
+  @Column({ type: 'timestamptz', nullable: true, default: null })
   registrationTokenExpires: Date;
 
   @Column({ type: 'varchar', length: 40, nullable: true, default: null })
@@ -83,9 +84,12 @@ export class User extends BaseEntity {
   @ManyToOne(type => Avatar, avatar => avatar.users)
   avatar: Avatar;
 
-  @CreateDateColumn() joinedAt: Date;
+  @OneToMany(type => Notification, notification => notification.user)
+  notifications: Notification[];
 
-  @UpdateDateColumn() updatedAt: Date;
+  @CreateDateColumn({ type: 'timestamptz' }) joinedAt: Date;
+
+  @UpdateDateColumn({ type: 'timestamptz' }) updatedAt: Date;
 
   @VersionColumn() v: number;
 }

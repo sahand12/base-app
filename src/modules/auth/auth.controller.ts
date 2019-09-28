@@ -1,12 +1,4 @@
-import {
-  Body,
-  Controller,
-  Post,
-  UseGuards,
-  UseInterceptors,
-  UsePipes,
-} from '@nestjs/common';
-import safeJsonStringify from 'safe-json-stringify';
+import { Body, Controller, Post, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
 import { trim } from 'ramda/';
 import { AuthService } from './auth.service';
 import { LoggingInterceptor } from '../../interceptors/sample.interceptor';
@@ -20,24 +12,16 @@ import { LoginOrSignupDto } from './dto/login-or-signup.dto';
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
-
+  
   @UseGuards(new BodyValidationGuard(LoginOrSignupDto))
-  @UsePipes(
-    new TransformationPipe('body', [
-      { name: 'cellphone', fn: cleanIRCellphoneNumber },
-    ]),
-  )
+  @UsePipes(new TransformationPipe('body', [{ name: 'cellphone', fn: cleanIRCellphoneNumber }]))
   @Post('login')
   loginOrSignup(@Body() body) {
     return this.authService.loginOrSignup(body);
   }
 
   @UseGuards(new BodyValidationGuard(VerifySignupDto))
-  @UsePipes(
-    new TransformationPipe('body', [
-      { name: 'cellphone', fn: cleanIRCellphoneNumber },
-    ]),
-  )
+  @UsePipes(new TransformationPipe('body', [{ name: 'cellphone', fn: cleanIRCellphoneNumber }]))
   @Post('signup/verify')
   verifySignup(@Body() body) {
     return this.authService.verifySignUp(body);

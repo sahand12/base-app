@@ -1,7 +1,10 @@
 import { ConflictException } from '@nestjs/common';
-import { User, UserRegistrationStatus } from './user.entity';
 import * as bcrypt from 'bcrypt';
 import { EntityRepository, Repository } from 'typeorm';
+import { omit } from 'ramda';
+import { addMinutes } from 'date-fns';
+
+import { User, UserRegistrationStatus } from './user.entity';
 import { UserDbDto } from './dto/user-db.dto';
 import { VerifySignupDto } from '../auth/dto/verify-signup.dto';
 import {
@@ -10,22 +13,31 @@ import {
   UserAlreadyRegisteredError,
   UserNotFoundError,
 } from './users.errors';
-import {
-  RegistrationMethod,
-  LoginOrSignupDto,
-} from '../auth/dto/login-or-signup.dto';
+import { RegistrationMethod, LoginOrSignupDto } from '../auth/dto/login-or-signup.dto';
 
+const REGISTRATION_TOKEN_EXPIRATION_DURATION_MINUTES = 3;
 const SALT_ROUNDS = 10;
 
 @EntityRepository(User)
 class UserRepository extends Repository<User> {
-  async signUp(signupDto: LoginOrSignupDto): Promise<UserDbDto> {
+  async signUp(
+    method: 'email' | 'cellphone',
+    { cellOrEmail, password }: LoginOrSignupDto,
+  ): Promise<User> {
     try {
-      const user = await this._buildNewUser(signupDto);
+      const user = new User();
+      if (method === 'email') {
+        user.email = cellOrEmail;
+      } else if (method === 'cellphone') {
+        user.cellphone = cellOrEmail;
+      }
+      user.password = await this.hashPassword(password);
+      const { token, expires } = this._generateRegistrationToken();
+      user.registrationToken = token;
+      user.registrationTokenExpires = expires;
       await user.save();
 
-      const { password, ...rest } = user;
-      return rest;
+      return omit(['password'], user);
     } catch (err) {
       if (err.code === '23505') {
         throw new ConflictException('Phone number already exists');
@@ -33,6 +45,14 @@ class UserRepository extends Repository<User> {
         throw err;
       }
     }
+  }
+
+  async issueNewRegistrationToken(user: User): Promise<User> {
+    const { token, expires } = this._generateRegistrationToken();
+    user.registrationToken = token;
+    user.registrationTokenExpires = expires;
+    await user.save();
+    return user;
   }
 
   async verifySignup(verifySignupDto: VerifySignupDto) {
@@ -84,10 +104,7 @@ class UserRepository extends Repository<User> {
    *  2. user with incorrect credentials --> false
    *  3. user with correct credentials --> User
    */
-  async validateUser(
-    cellphone: string,
-    pass: string,
-  ): Promise<UserDbDto | false | undefined> {
+  async validateUser(cellphone: string, pass: string): Promise<UserDbDto | false | undefined> {
     const user = await this.findOne({ cellphone });
 
     // 1. No user found
@@ -105,22 +122,25 @@ class UserRepository extends Repository<User> {
     return false;
   }
 
-  private async _buildNewUser({ cellphone, password }): Promise<User> {
-    const user = new User();
-    user.cellphone = cellphone;
-    if (password !== null && password !== undefined && password !== '') {
-      user.password = await this.hashPassword(password);
-    }
-
-    return user;
-  }
-
   hashPassword(plainPassword): Promise<string> {
     return bcrypt.hash(plainPassword, SALT_ROUNDS);
   }
 
   comparePassword(plainPassword, hash): Promise<boolean> {
     return bcrypt.compare(plainPassword, hash);
+  }
+
+  private _generateRegistrationToken() {
+    return {
+      token: this._randomInt(5).toString(10),
+      expires: addMinutes(new Date(), REGISTRATION_TOKEN_EXPIRATION_DURATION_MINUTES),
+    };
+  }
+
+  private _randomInt(size: number): number {
+    const high = 10 ** size;
+    const low = 10 ** (size - 1);
+    return Math.floor(Math.random() * (high - low) + low);
   }
 }
 

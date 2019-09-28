@@ -7,8 +7,14 @@ import { logger, LoggerMiddleware } from './middlewares/logger.middleware';
 declare const module: any;
 
 async function bootstrap() {
+  // configure dotenv module
+  require('dotenv').config();
+
+  // Create app instance
   const app = await NestFactory.create(AppModule);
-  await app.listen(3000);
+
+  // Listen for connections
+  await app.listen(process.env.PORT);
 
   if (module.hot) {
     module.hot.accept();

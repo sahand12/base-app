@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import {pick} from 'ramda';
+import { pick } from 'ramda';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { LoginOrSignupResult, UsersService } from '../users/users.service';
 import { UserDbDto } from '../users/dto/user-db.dto';
@@ -8,6 +8,8 @@ import { VerifySignupDto } from './dto/verify-signup.dto';
 import { LoginOrSignupDto } from './dto/login-or-signup.dto';
 import { InvalidLoginOrSignupResult } from '../users/users.errors';
 import { User } from '../users/user.entity';
+import { NotificationService } from '../notifications/notification.service';
+import { NotificationPurpose } from '../notifications/notification.types';
 
 @Injectable()
 export class AuthService {
@@ -20,6 +22,7 @@ export class AuthService {
   async loginOrSignup(signupDto: LoginOrSignupDto) {
     const { result, user } = await this.usersService.loginOrSignup(signupDto);
     console.log(result, user);
+    return { result, user };
 
     if (result === LoginOrSignupResult.LOGIN) {
       return this._handleLogin(user);
@@ -45,13 +48,30 @@ export class AuthService {
 
   // 1. User has been created but needs to verify its email/cellphone so send
   // the registration token by email/sms/...
-  private _handleSignup(user: User) {
-    return {
-      action: 'REDIRECT',
-      data: {
-        to: '/auth/login/verify',
-      },
-    };
+  private async _handleSignup(user: User) {
+    //     const { info, notification } = await this.notificationService.sendMail(
+    //       NotificationPurpose.ACCOUNT_REGISTRATION_CODE,
+    //       {
+    //         to: user.email,
+    //         subject: 'Nahangz.com: Registration Code',
+    //         text: `Your code is :${user.registrationToken}`,
+    //         html: `
+    // <div dir="rtl">
+    //   <h1>
+    //     <span style="font-size: 20px">کد ثبت نام شما</span>&nbsp;
+    //     <span style="font-size: 48px">${user.registrationToken}</span>
+    //   </h1>
+    // </div>`,
+    //       },
+    //     );
+    //     return {
+    //       info,
+    //       notification,
+    //       action: 'REDIRECT',
+    //       data: {
+    //         to: '/auth/login/verify',
+    //       },
+    //     };
   }
 
   // 1. User is created before but he has not verified his email/sms so send a redirect
@@ -85,10 +105,7 @@ export class AuthService {
   }
 
   // To be used with passport strategy
-  async validateUser(
-    cellphone: string,
-    pass: string,
-  ): Promise<UserDbDto | null> {
+  async validateUser(cellphone: string, pass: string): Promise<UserDbDto | null> {
     const result = await this.usersService.validateUser(cellphone, pass);
 
     // 1. Incorrect credentials || 2.No user found
