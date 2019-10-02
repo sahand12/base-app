@@ -1,11 +1,19 @@
 import * as sgMail from '@sendgrid/mail';
+import {
+  EmailNotificationProviderInterface,
+  EmailNotificationRequestInterface,
+  NotificationProviderResponseInterface,
+} from '../../notification.service';
 
 // Set credentials
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-async function send(request) {
+async function send(
+  request: EmailNotificationRequestInterface,
+): Promise<NotificationProviderResponseInterface> {
   try {
-    const [response] = await sgMail.send(request);
+    // @TODO: remove as any
+    const [response] = await sgMail.send(request as any);
     const raw = response.toJSON();
     return {
       status: 'success',
@@ -21,9 +29,13 @@ async function send(request) {
   }
 }
 
-send.provider = 'EMAIL_SENDGRID';
+const notificationProviderSendgrid: EmailNotificationProviderInterface = {
+  send,
+  name: 'sendgrid',
+  channel: 'email',
+};
 
-export { send };
+export default notificationProviderSendgrid;
 
 // error shape: (If the request was successfully received by the sendgrid server)
 // Error{stack, code, message, response: {headers: object, body: object}}

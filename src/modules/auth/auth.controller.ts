@@ -1,5 +1,6 @@
 import { Body, Controller, Post, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
 import { trim } from 'ramda/';
+
 import { AuthService } from './auth.service';
 import { LoggingInterceptor } from '../../interceptors/sample.interceptor';
 import { BodyValidationGuard } from '../../guards/body-validation.guard';

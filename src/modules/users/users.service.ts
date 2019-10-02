@@ -18,15 +18,17 @@ enum LoginOrSignupResult {
   'NEEDS_VERIFICATION' = 'NEEDS_VERIFICATION',
 }
 
+type LoginOrSignupMethod = 'email' | 'cellphone';
+
 @Injectable()
 class UsersService {
   constructor(@InjectRepository(UserRepository) private userRepository: UserRepository) {}
 
   async loginOrSignup(
     loginOrSignupDto: LoginOrSignupDto,
-  ): Promise<{ result: LoginOrSignupResult; user: User }> {
+  ): Promise<{ result: LoginOrSignupResult; user: User; method: LoginOrSignupMethod }> {
     const { cellOrEmail, password } = loginOrSignupDto;
-    let method;
+    let method: LoginOrSignupMethod;
     let payload = {};
 
     if (isValidIRCellphoneNumber(cellOrEmail)) {
@@ -49,37 +51,43 @@ class UsersService {
 
     // 2. a user is found but he is not verified.
     if (user.registrationStatus === UserRegistrationStatus.PENDING_VERIFICATION) {
-      return this._newRegistrationToken(user);
+      return this._newRegistrationToken(method, user);
     }
 
     // 3. This is a login
-    return this._login(user, password);
+    return this._login(method, user, password);
   }
 
-  private async _newRegistrationToken(user) {
+  private async _newRegistrationToken(
+    method: LoginOrSignupMethod,
+    user: User,
+  ): Promise<{ result: LoginOrSignupResult; user: User; method: LoginOrSignupMethod }> {
     const userWithNewToken = await this.userRepository.issueNewRegistrationToken(user);
 
     return {
       result: LoginOrSignupResult.NEEDS_VERIFICATION,
-      user: userWithNewToken,
+      user: this.cleanUser(userWithNewToken),
+      method,
     };
   }
 
   private async _signup(
     method,
     loginOrSignupDto: LoginOrSignupDto,
-  ): Promise<{ result: LoginOrSignupResult; user: User }> {
+  ): Promise<{ result: LoginOrSignupResult; user: User; method: LoginOrSignupMethod }> {
     const newUser = await this.userRepository.signUp(method, loginOrSignupDto);
     return {
       result: LoginOrSignupResult.SIGNUP,
       user: newUser,
+      method,
     };
   }
 
   private async _login(
+    method: LoginOrSignupMethod,
     user: User,
     password: string,
-  ): Promise<{ result: LoginOrSignupResult; user: User }> {
+  ): Promise<{ result: LoginOrSignupResult; user: User; method: LoginOrSignupMethod }> {
     const isCredentialsCorrect = await this.userRepository.comparePassword(user.password, password);
 
     // 1. password is not valid
@@ -89,12 +97,26 @@ class UsersService {
 
     return {
       result: LoginOrSignupResult.LOGIN,
-      user,
+      user: this.cleanUser(user),
+      method,
     };
   }
 
   verifySignup(verifySignupDto: VerifySignupDto) {
     return this.userRepository.verifySignup(verifySignupDto);
+  }
+
+  cleanUser(user: User): User {
+    return omit(
+      [
+        'password',
+        'passwordResetToken',
+        'passwordResetExpires',
+        // 'registrationToken',
+        'registrationTokenExpires',
+      ],
+      user,
+    );
   }
 
   logIn(loginDto: LoginDto): Promise<UserDbDto | false | undefined> {
@@ -115,4 +137,4 @@ class UsersService {
   }
 }
 
-export { LoginOrSignupResult, UsersService };
+export { LoginOrSignupMethod, LoginOrSignupResult, UsersService };

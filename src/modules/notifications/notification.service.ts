@@ -1,15 +1,73 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+
 import { Notification } from './notification.entity';
 import smsProvider from './providers/sms';
 import emailProvider from './providers/email';
 import { User } from '../users/user.entity';
+import { NotificationPurpose } from './notification.types';
+
+type NotificationChannelType = 'email' | 'sms';
+export interface NotificationRequestInterface {
+  sms?: SmsNotificationRequestInterface;
+  email?: EmailNotificationRequestInterface;
+}
+export interface SmsNotificationRequestInterface {
+  to: string;
+  text: string;
+  sendOn?: string;
+  textId?: string;
+}
+export interface EmailNotificationRequestInterface {
+  to: string;
+  from?: string;
+  subject?: string;
+  text?: string;
+  html?: string;
+  templateId?: string;
+  dynamic_template_data?: any;
+}
+type NotificationRequestType = SmsNotificationRequestInterface | EmailNotificationRequestInterface;
+
+export interface NotificationProviderResponseInterface {
+  status: 'success' | 'error';
+  providerGeneratedId?: string;
+  raw?: any;
+  errors?: any[];
+}
+
+export interface NotificationResponseInterface {
+  status: 'success' | 'error';
+  channel: NotificationChannelType;
+  notification: Notification;
+}
+export interface EmailNotificationResponseInterface extends NotificationResponseInterface {
+  channel: 'email';
+}
+export interface SmsNotificationResponseInterface extends NotificationResponseInterface {
+  channel: 'sms';
+}
+
+export interface NotificationProviderInterface {
+  checkDelivery?(id: string): Promise<boolean>;
+  send(request: NotificationRequestType): Promise<NotificationProviderResponseInterface>;
+  name: string;
+  channel: NotificationChannelType;
+}
+export interface SmsNotificationProviderInterface extends NotificationProviderInterface {
+  send(request: SmsNotificationRequestInterface): Promise<NotificationProviderResponseInterface>;
+  channel: 'sms';
+}
+export interface EmailNotificationProviderInterface extends NotificationProviderInterface {
+  send(request: EmailNotificationRequestInterface): Promise<NotificationProviderResponseInterface>;
+  channel: 'email';
+}
 
 @Injectable()
 class NotificationService {
-  private emailProvider;
-  private smsProvider;
+  private emailProvider: EmailNotificationProviderInterface;
+  private smsProvider: SmsNotificationProviderInterface;
 
   constructor(
     @InjectRepository(Notification)
@@ -22,41 +80,61 @@ class NotificationService {
   // 1. First create a notification and save it to the database
   // 2. Send the request to the provider
   // 3. save the result back to the notification
-  async send(purpose, request, toWhom: User) {
-    const { sms, email } = request;
-    if (typeof sms === 'object') {
-      return this._sendSms(purpose, request, toWhom);
-    } else if (typeof email === 'object') {
-      return this._sendEmail(purpose, request, toWhom);
+  async send(
+    purpose: NotificationPurpose,
+    request: NotificationRequestInterface,
+    toWhom: User,
+  ): Promise<NotificationProviderResponseInterface> {
+    if (typeof request.sms === 'object') {
+      return this._sendSms(purpose, request as SmsNotificationRequestInterface, toWhom);
+    } else if (typeof request.email === 'object') {
+      return this._sendEmail(purpose, request as EmailNotificationRequestInterface, toWhom);
     }
   }
 
-  async _sendSms(purpose, request, toWhom) {
+  // @TODO: what to do when 'sendOn' is present
+  async _sendSms(
+    purpose: NotificationPurpose,
+    request: SmsNotificationRequestInterface,
+    toWhom: User,
+  ): Promise<NotificationResponseInterface> {
     const { text, to } = request;
+    let sendResult: NotificationProviderResponseInterface;
     const notification = new Notification();
     notification.purpose = purpose;
     notification.user = toWhom;
     notification.channel = 'sms';
-    notification.provider = this.smsProvider.provider;
+    notification.provider = this.smsProvider.name;
     notification.text = text;
     notification.to = to;
 
     await notification.save();
-    return notification;
+    sendResult = await this.smsProvider.send({ ...request, textId: notification.id });
+    if (sendResult.status === 'success') {
+      return { status: 'success', channel: 'sms', notification };
+    }
+    return { status: 'error', channel: 'sms', notification };
   }
 
-  async _sendEmail(purpose, request, toWhom) {
+  async _sendEmail(purpose, request, toWhom): Promise<NotificationResponseInterface> {
     const { to, text } = request;
+    let response: NotificationProviderResponseInterface;
     const notification = new Notification();
     notification.purpose = purpose;
     notification.user = toWhom;
     notification.channel = 'email';
-    notification.provider = this.emailProvider.provider;
+    notification.provider = this.emailProvider.name;
     notification.text = text || null;
     notification.to = to;
 
     await notification.save();
-    return notification;
+    throw new Error('not implemented');
+    response = await this.emailProvider.send(request);
+
+    if (response.status === 'success') {
+      return { status: 'success', channel: 'email', notification };
+    }
+    return { status: 'error', channel: 'email', notification };
   }
 
   // async sendMail(
@@ -87,32 +165,6 @@ class NotificationService {
   //   await notif.save();
   //
   //   return { info, notification: notif };
-  // }
-  //
-  // async sendSms(
-  //   purpose: NotificationPurpose,
-  //   options: {
-  //     message: string;
-  //     to: string;
-  //   },
-  // ): Promise<boolean> {
-  //   const notif = new Notification();
-  //   notif.kind = NotificationKind.SMS;
-  //   notif.purpose = purpose;
-  //   notif.provider = NotificationProvider.SMS_NIKSMS;
-  //   notif.to = options.to;
-  //   notif.body = options.message;
-  //   await notif.save();
-  //
-  //   const response = await this.smsTransporter.sendOneToOne(options.message, notif.id, options.to);
-  //
-  //   if (typeof response.data === 'object' || Array.isArray(response)) {
-  //     notif.response = JSON.stringify({ statusCode: response.statusCode, data: response.data });
-  //     await notif.save();
-  //   } else {
-  //   }
-  //
-  //   return { response: response.data, notification: notif };
   // }
 }
 

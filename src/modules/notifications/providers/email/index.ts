@@ -1,3 +1,3 @@
-import { send } from './sendgrid';
+import notificationProviderSendgrid from './sendgrid';
 
-export default {send, provider: send.provider};
+export default notificationProviderSendgrid;

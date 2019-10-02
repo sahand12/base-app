@@ -1,25 +1,33 @@
 import axios from 'axios';
-import { niksmsEndpoints, niksmsSendSmsResult } from './niksms-config';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
+
+import { niksmsEndpoints, niksmsSendSmsResult } from './niksms-config';
+import {
+  NotificationProviderInterface,
+  NotificationProviderResponseInterface,
+  SmsNotificationProviderInterface,
+  SmsNotificationRequestInterface,
+} from '../../notification.service';
 
 dotenv.config({ path: path.resolve('../../../../../.env') });
 
 const { NIKSMS_USERNAME, NIKSMS_PASSWORD, NIKSMS_SENDER_NUMBER } = process.env;
 
-async function send(request) {
+async function send(request: SmsNotificationRequestInterface): Promise<NotificationProviderResponseInterface> {
   try {
     const response = await _sendOne(request);
-    const { data } = response;
+    const { data, status } = response;
     const responseMeaning = data.Status && niksmsSendSmsResult[data.Status];
 
-    if (data.Status === 1) {
+    if (status >= 200 && status < 300 && data.Status === 1) {
       return {
         status: 'success',
         providerGeneratedId: Array.isArray(data && data.NikIds) ? data.NikIds[0] : undefined,
         raw: { ...data, meaning: responseMeaning },
       };
     } else {
+      // @TODO: build an error based on the response status number
       return {
         status: 'error',
         raw: { ...data, meaning: responseMeaning },
@@ -28,13 +36,12 @@ async function send(request) {
   } catch (error) {
     return {
       status: 'error',
-      error,
+      errors: [error],
     };
   }
 }
-send.provider = 'SMS_NIKSMS';
 
-async function _sendOne(request) {
+async function _sendOne(request: SmsNotificationRequestInterface) {
   const { to, text, textId, sendOn } = request;
   return axios({
     timeout: 10000,
@@ -54,7 +61,8 @@ async function _sendOne(request) {
   });
 }
 
-async function checkDelivery(providerGeneratedId) {
+// @TODO: finish the implementation
+async function checkDelivery(providerGeneratedId: string): Promise<boolean> {
   const response = await axios({
     timeout: 10e4,
     url: niksmsEndpoints.DELIVERY_STATUS,
@@ -66,7 +74,15 @@ async function checkDelivery(providerGeneratedId) {
     },
   });
 
+  throw new Error('not implemented');
   return response.data;
 }
 
-export { send };
+const smsProviderNiksms: SmsNotificationProviderInterface = {
+  send,
+  checkDelivery,
+  name: 'niksms',
+  channel: 'sms',
+};
+
+export default smsProviderNiksms;

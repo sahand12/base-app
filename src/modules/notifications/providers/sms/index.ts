@@ -1,3 +1,3 @@
-import {send} from './niksms';
+import smsProviderNiksms from './niksms';
 
-export default {send, provider: send.provider};
+export default smsProviderNiksms;
