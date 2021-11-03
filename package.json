@@ -46,7 +46,7 @@
     "safe-json-stringify": "^1.2.0",
     "typeorm": "^0.2.18",
     "uuid": "^3.3.3",
-    "validator": "^11.1.0"
+    "validator": "^13.7.0"
   },
   "devDependencies": {
     "@nestjs/testing": "6.1.1",
